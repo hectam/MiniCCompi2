@@ -172,13 +172,33 @@ public:
 class IfStatement : public Statement
 {
 public:
-    IfStatement(Expr *Expressions, StatementList Statements, int line)
+    IfStatement(Expr *Expressions, Statement* Statements, int line)
     {
         this->Expressions = Expressions;
         this->Statements = Statements;
         this->line = line;
     }
-    StatementList Statements;
+    Statement * Statements;
+    Expr *Expressions;
+    int evaluateSemantic();
+    StatementKind getKind()
+    {
+        return IF_STATEMENT;
+    }
+};
+
+class ElseStatement : public Statement
+{
+public:
+    ElseStatement(Expr *Expressions, Statement* True,Statement* False, int line)
+    {
+        this->Expressions = Expressions;
+        this->TrueStatement = True;
+        this->FalseStatement = False;
+        this->line = line;
+    }
+    Statement * TrueStatement;
+    Statement * FalseStatement;
     Expr *Expressions;
     int evaluateSemantic();
     StatementKind getKind()
@@ -250,10 +270,10 @@ public:
 class ForStatement : public Statement
 {
 public:
-    ForStatement(Statement *LeftExpression, Statement *RightExpression, Expr *Expression, Statement *Statements, int line)
+    ForStatement(Statement *Left, Statement *Right, Expr *Expression, Statement *Statements, int line)
     {
-        this->LeftExpression = LeftExpression;
-        this->RightExpression = RightExpression;
+        this->LeftExpression = Left;
+        this->RightExpression = Right;
         this->Expression = Expression;
         this->Statements = Statements;
         this->line = line;

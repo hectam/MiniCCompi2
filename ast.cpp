@@ -106,6 +106,7 @@ int ExpressionStatement::evaluateSemantic()
 }
 int ForStatement::evaluateSemantic()
 {
+    pushContext();
     if (LeftExpression != NULL)
     {
         LeftExpression->evaluateSemantic();
@@ -118,6 +119,7 @@ int ForStatement::evaluateSemantic()
     {
         Statements->evaluateSemantic();
     }
+    pushContext();
 
     return 0;
 }
@@ -147,27 +149,58 @@ int BreakStatement::evaluateSemantic()
 }
 int WhileStatement::evaluateSemantic()
 {
+    if(this->Expressions->getType() != BOOL){
+        exit(0);
+    }
+    pushContext();
     if (Statements != NULL)
     {
         Statements->evaluateSemantic();
     }
+    popContext();
     return 0;
 }
 int IfStatement::evaluateSemantic()
 {
-    list<Statement *>::iterator its = this->Statements.begin();
-    while (its != this->Statements.end())
-    {
-        Statement *stmt = *its;
-        if (stmt != NULL)
-        {
-            stmt->evaluateSemantic();
+         if(this->Expressions->getType() != BOOL){          
+        exit(0);
         }
+        pushContext();
+        if (Statements != NULL)
+        {
+            Statements->evaluateSemantic();
+        }
+        popContext();
 
-        its++;
-    }
+    
     return 0;
 }
+
+int ElseStatement::evaluateSemantic()
+{
+         if(this->Expressions->getType() != BOOL){          
+        exit(0);
+        }
+
+        pushContext();
+        if (TrueStatement != NULL)
+        {
+            TrueStatement->evaluateSemantic();
+        }
+        popContext();
+
+
+        pushContext();
+        if (FalseStatement != NULL)
+        {
+            FalseStatement->evaluateSemantic();
+        }
+        popContext();
+
+    
+    return 0;
+}
+
 int GlobalDeclaration::evaluateSemantic()
 {
     if (declaration != NULL)
@@ -179,11 +212,30 @@ int GlobalDeclaration::evaluateSemantic()
 
 int Declaration::evaluateSemantic()
 {
-    if (this->type != 0)
-    {
-    }
 
-    return 0;
+    list<InitDeclarator * >::iterator it = this->declarations.begin();
+    while(it != this->declarations.end()){
+        InitDeclarator * declaration = (*it);
+        if(declaration->declarator->isArray){
+            if(declaration->declarator->arrayDeclaration == NULL && declaration->initializer == NULL){
+                
+                exit(0);
+            }
+        }
+        if(declaration->initializer != NULL){
+            list<Expr *>::iterator ite = declaration->initializer->expressions.begin();
+            while(ite!= declaration->initializer->expressions.end()){
+                Type exprType = (*ite)->getType();
+                if(exprType != FLOAT && exprType != INT){
+                    exit(0);
+                }
+                ite++;
+            }
+        }
+        
+    it++;
+  }
+  return 0;
 }
 
 void addMethodDeclaration(string id, int line, int type, ParameterList params)

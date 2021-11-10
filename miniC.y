@@ -67,11 +67,13 @@
 %type<argument_list_t> argument_expression_list
 %%
 
+
+
 input: input external_declaration
     | external_declaration
     ;
 
-external_declaration: method_definition
+external_declaration: method_definition {$$ = $1;}
             | declaration {$$ = new GlobalDeclaration($1);}
             ;
 
@@ -143,26 +145,16 @@ statement: while_statement {$$ = $1;}
         | jump_statement {$$ = $1;}
         | print_statement {$$ =$1;}
         ;
-print_statement: TK_PRINTF expression ';'
-{
-    $$ = new PrintStatement($2,yylineno);
-}
-                ;
+
+print_statement: TK_PRINTF expression ';'{$$ = new PrintStatement($2,yylineno);};
+
+                
 statement_list: statement_list statement { $$ = $1; $$->push_back($2); }
               | statement { $$ = new StatementList; $$->push_back($1); }
               ;
 
-if_statement: TK_IF '(' expression ')' statement{
-    StatementList list;
-    list.push_back($5);
-    $$ = new IfStatement($3, list, yylineno);
-}
-            | TK_IF '(' expression ')' statement TK_ELSE statement{
-                StatementList list;
-                list.push_back($5);
-                list.push_back($7);
-                $$ = new IfStatement($3, list, yylineno);
-            }
+if_statement: TK_IF '(' expression ')' statement{ $$ = new IfStatement($3, $5, yylineno);}
+            | TK_IF '(' expression ')' statement TK_ELSE statement{ $$ = new ElseStatement($3, $5, $7 , yylineno);}
             ;
   
 for_statement: TK_FOR '(' expression_statement expression_statement expression ')' statement{
@@ -180,15 +172,12 @@ expression_statement: ';'
                     }
                     ;
 
-while_statement: TK_WHILE '(' expression ')' statement{ 
-    $$ = new WhileStatement($3, $5, yylineno);
-}
+while_statement: TK_WHILE '(' expression ')' statement{ $$ = new WhileStatement($3, $5, yylineno);}
                ;
 
-jump_statement: TK_RETURN ';' {$$ = new ReturnStatement(NULL,yylineno);}
+jump_statement: TK_RETURN expression ';' {$$ = new ReturnStatement($2,yylineno);}
               | TK_CONTINUE ';'{$$ = new ContinueStatement(yylineno);}
               | TK_BREAK ';'{$$ = new BreakStatement(yylineno);}
-              | TK_RETURN expression ';'{$$ = new ReturnStatement($2,yylineno);}
               ;
 
 block_statement: '{' statement_list '}' { 
